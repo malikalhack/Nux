@@ -1,0 +1,73 @@
+# Nux solution: two firmwares (vehicle and transmitter) for the STM32F103C8,
+# sharing the radio protocol and the AcroSched scheduler through common/.
+solution:
+  created-for: CMSIS-Toolbox@2.12.0
+  cdefault:
+
+  # Compilers that can be selected (AC6 is the default, see below).
+  select-compiler:
+    - compiler: AC6@6.20.1
+    - compiler: GCC@15.2.1
+
+  # Tool-specific controls shared by every project.
+  misc:
+    - for-compiler: AC6
+      C-CPP:
+        - -gdwarf-4
+      ASM:
+        - -gdwarf-4
+        - -Wa,armasm,--diag_suppress=A1950W
+    - for-compiler: GCC
+      C-CPP:
+        - -ffunction-sections
+        - -fdata-sections
+        - -Wall
+        - -Wextra
+      Link:
+        - --specs=nano.specs
+        - --specs=nosys.specs
+        - -Wl,--gc-sections
+        - -Wl,--print-memory-usage
+
+  # Packs that define the device and the CMSIS core.
+  packs:
+    - pack: Keil::STM32F1xx_DFP
+    - pack: ARM::CMSIS
+
+  # Single hardware target: the STM32F103C8 (Cortex-M3, 64 KB Flash, 20 KB RAM).
+  target-types:
+    - type: STM32F103C8
+      device: STM32F103C8
+      target-set:
+        - set:
+          debugger:
+            name: ST-Link@pyOCD
+            clock: 8000000
+            protocol: swd
+          images:
+            - project-context: vehicle.Debug
+
+  # Build configurations.
+  build-types:
+    - type: Debug
+      debug: on
+      optimize: none
+      define:
+        - DEBUG
+    - type: Release
+      debug: off
+      misc:
+        - for-compiler: AC6
+          C-CPP:
+            - -Os
+        - for-compiler: GCC
+          C-CPP:
+            - -Os
+
+  # Firmwares.
+  projects:
+    - project: vehicle/vehicle.cproject.yml
+    - project: transmitter/transmitter.cproject.yml
+
+  # Default compiler when --toolchain is not passed.
+  compiler: AC6@6.20.1

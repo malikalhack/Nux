@@ -91,3 +91,31 @@ bottom). Release-facing changes are summarised separately in
 - Kept the fault handlers (`handlers.c`) as a naked MSP/PSP trampoline into a
   common C handler that captures the stacked frame and fault-status registers.
 
+### Build system
+- Set up the CMSIS-Toolbox solution `nux.csolution.yml` with a single target
+  (`STM32F103C8`), `Debug`/`Release` build types and both toolchains
+  (AC6 6.20.1, GCC 15.2.1).
+- Following the intended workflow, projects pull in **only** `ARM::CMSIS:CORE`
+  (no `Device:Startup`); the device header and `STM32F10X_MD` define come from
+  the DFP via the selected device, and startup/`SystemInit` are project-owned.
+- Added a shared layer `common/nux_common.clayer.yml` (CMSIS core, protocol,
+  scheduler adapter and the pre-built AcroSched library — `.lib` for AC6,
+  `.a` for GCC) plus the two firmware projects `vehicle`/`transmitter`, each
+  with its BSP group and a minimal `src/main.c` skeleton.
+- Vendored the STM32F103C8 memory map and linker templates into each project's
+  `RTE/Device/STM32F103C8/` (`regions_*.h`, `ac6_linker_script.sct.src`,
+  `gcc_linker_script.ld.src`); cbuild wires the `linker:` node automatically.
+- GCC C runtime resolved with `--specs=nano.specs --specs=nosys.specs`.
+- Verified: all four contexts build clean on **both** toolchains; the AcroSched
+  library links in each case (ROM ~2 KB, RAM ~0.8 KB for the skeleton).
+
+### Documentation & runtime stubs
+- Silenced the GCC-only newlib link warnings (`_close`/`_lseek`/`_read`/`_write`
+  "is not implemented and will always fail") by adding minimal no-op syscall
+  stubs `bsp/src/syscalls.c` to both firmwares, compiled for **GCC only**
+  (`for-compiler: GCC`); AC6 retargets through the ARM C Library and never sees
+  the file. Re-verified: GCC 4/4 and AC6 4/4 contexts still build clean.
+- Aligned the README repository-layout tree with the actual structure
+  (`nux.csolution.yml`, `common/nux_common.clayer.yml`, `lib/{inc,ac6,gcc}`,
+  per-project `*.cproject.yml`, `bsp/{inc,src}`, `src/`, `RTE/Device/`).
+

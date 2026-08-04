@@ -1,0 +1,29 @@
+# Shared Nux layer: CMSIS core, radio protocol, scheduler adapter and the
+# frozen AcroSched library. Device-agnostic — no BSP, startup or memory map.
+layer:
+  type: Common
+
+  components:
+    - component: ARM::CMSIS:CORE
+
+  add-path:
+    - protocol
+    - sched
+    - lib/inc
+
+  groups:
+    - group: Protocol
+      files:
+        - file: protocol/nux_protocol.c
+        - file: protocol/nux_crc.c
+    - group: Scheduler
+      files:
+        - file: sched/nux_sched.c
+    - group: AcroSched library
+      for-compiler: AC6
+      files:
+        - file: lib/ac6/acrosched.lib
+    - group: AcroSched library
+      for-compiler: GCC
+      files:
+        - file: lib/gcc/libacrosched.a

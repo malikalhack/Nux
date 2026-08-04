@@ -1,0 +1,48 @@
+# Nux transmitter firmware (the hand-held controller): brings up the
+# STM32F103C8, reads the joysticks/buttons and sends command frames.
+project:
+
+  layers:
+    - layer: ../common/nux_common.clayer.yml
+
+  define:
+    - __RTE__
+
+  processor:
+    fpu: off
+    endian: little
+
+  add-path:
+    - bsp/inc
+    - RTE/Device/STM32F103C8
+
+  output:
+    type:
+      - elf
+      - hex
+      - map
+
+  misc:
+    - for-compiler: AC6
+      C:
+        - -std=c11
+    - for-compiler: GCC
+      C:
+        - -std=c11
+
+  groups:
+    - group: BSP
+      add-path:
+        - bsp/inc
+      files:
+        - file: bsp/src/bsp.c
+        - file: bsp/src/handlers.c
+        - file: bsp/src/startup_stm32f103xb_ac6.S
+          for-compiler: AC6
+        - file: bsp/src/startup_stm32f103xb_gcc.S
+          for-compiler: GCC
+        - file: bsp/src/syscalls.c
+          for-compiler: GCC
+    - group: App
+      files:
+        - file: src/main.c

@@ -60,20 +60,26 @@ There are **no tachometers or encoders**: throttle is open-loop (duty = throttle
 
 ```
 Nux/
-├─ common/                # shared by both firmwares
-│  ├─ protocol/           # radio contract compiled into both sides
-│  ├─ lib/                # frozen AcroSched: public headers + prebuilt libs
-│  │  ├─ *.h              # public scheduler headers + acrosched_port.h
-│  │  ├─ stm32f1-ac6/     # AC6 library (acrosched.lib)
-│  │  └─ stm32f1-gcc/     # GCC library (libacrosched.a)
-│  └─ sched/              # thin scheduler adapter (SysTick tick source)
-├─ vehicle/               # car firmware (Nux)
-│  ├─ inc/
-│  └─ src/                # bsp, radio, motor, servo, power, lights
-├─ transmitter/           # hand-held controller firmware
-│  ├─ inc/
-│  └─ src/                # bsp, radio, input (dual single-axis joysticks)
-└─ wiki/                  # long-form documentation
+├─ nux.csolution.yml            # csolution: targets, build-types, compilers
+├─ common/                      # shared by both firmwares
+│  ├─ nux_common.clayer.yml     # common layer (CMSIS:CORE, sources, lib)
+│  ├─ protocol/                 # radio contract compiled into both sides
+│  ├─ sched/                    # thin scheduler adapter (SysTick tick source)
+│  └─ lib/                      # frozen AcroSched: headers + prebuilt libs
+│     ├─ inc/                   # public scheduler headers + acrosched_port.h
+│     ├─ ac6/                   # AC6 library (acrosched.lib)
+│     └─ gcc/                   # GCC library (libacrosched.a)
+├─ vehicle/                     # car firmware (Nux)
+│  ├─ vehicle.cproject.yml
+│  ├─ bsp/{inc,src}/            # board support (clock, UART, watchdog, faults)
+│  ├─ src/                      # main + radio, motor, servo, power, lights
+│  └─ RTE/Device/STM32F103C8/   # regions + linker scripts
+├─ transmitter/                 # hand-held controller firmware
+│  ├─ transmitter.cproject.yml
+│  ├─ bsp/{inc,src}/            # board support (clock, UART, watchdog, faults)
+│  ├─ src/                      # main + radio, input (dual single-axis joysticks)
+│  └─ RTE/Device/STM32F103C8/   # regions + linker scripts
+└─ wiki/                        # long-form documentation
 ```
 
 ---

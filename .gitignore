@@ -11,6 +11,7 @@ wiki/
 .cmsis/
 
 # Build results
+/out/
 [Dd]ebug/
 [Rr]elease/
 

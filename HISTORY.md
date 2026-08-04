@@ -57,3 +57,21 @@ bottom). Release-facing changes are summarised separately in
 - Extracted `nuxCrc16` (CRC-16/CCITT-FALSE) into `common/protocol/nux_crc.{h,c}`.
 - Implemented the frame API in `common/protocol/nux_protocol.c`:
   `nuxCommandFinalize`/`nuxCommandValid`, `nuxTelemetryFinalize`/`nuxTelemetryValid`.
+
+### Scheduler adapter
+- Vendored the frozen AcroSched 2.1.0 library into `common/lib/`: public headers
+  in `inc/` plus the pre-built archives `ac6/acrosched.lib` and
+  `gcc/libacrosched.a`. Confirmed the vendored `acrosched_config.h`
+  matches the agreed configuration (cooperative, `MAX_TASKS = 8`, watchdog on,
+  IPC on, timers off, idle hook on).
+- Added the Cortex-M3 port header `common/lib/inc/acrosched_port.h` (32-bit tick,
+  PRIMASK critical sections, `__WFI` wait-for-event); it is required because
+  `acrosched_config.h` includes it and it is not part of the frozen library.
+- Wrote the thin scheduler adapter `common/sched/nux_sched.{h,c}` (REQ-NUX-072):
+  a self-contained `Nux*` interface that hides the `acro*` API, owns the 1 kHz
+  tick counter (`nuxSchedTick` / `nuxSchedNow`, bound to the scheduler in
+  `nuxSchedInit`), forwards task management, and re-exports the IPC event flags
+  as `SNuxEventGroup_t` / `nuxEventSet`/`nuxEventGet`/`nuxEventClear`.
+  `_Static_assert` guards keep the mode/status encodings and the tick width in
+  lock-step with the pre-built library ABI.
+

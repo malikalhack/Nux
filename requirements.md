@@ -87,8 +87,11 @@ Status legend: **Draft** (agreed, not implemented) · **WIP** · **Done** ·
 | REQ-NUX-071 | The scheduler is linked as a **frozen pre-built library**; its source is **not** vendored into this public repo. | Draft |
 | REQ-NUX-072 | Application code accesses the scheduler through a **thin adapter** (`common/sched/`), not directly. | Draft |
 | REQ-NUX-073 | The system tick source is **SysTick at 1 kHz**; the control loop runs at **50 Hz**. | Draft |
-| REQ-NUX-074 | Radio RX hands frames to a task via scheduler **IPC** (event flags / mailbox). | Draft |
+| REQ-NUX-074 | Radio RX signals a task via scheduler **IPC event flags**: a DIO0 ISR sets an `RX_DONE` bit; the radio task reads the FIFO and validates the CRC outside the ISR. | Draft |
 | REQ-NUX-075 | The shared **protocol** (frames, version, CRC) lives in `common/protocol/` and compiles into both firmwares. | Draft |
+| REQ-NUX-076 | The AcroSched library is built with the **cooperative kernel**, `ACROSCHED_MAX_TASKS = 8`, a **32-bit tick** (`uint32_t`) at 1 kHz, and **no software timers** (periodic task modes cover blink / fail-safe / telemetry cadence). Both firmwares link the same configuration. | Draft |
+| REQ-NUX-077 | An independent **hardware watchdog (IWDG)** is refreshed from the scheduler loop via the `acroWatchdogRefresh()` hook (`ACROSCHED_USE_WATCHDOG = 1`). | Draft |
+| REQ-NUX-078 | The scheduler **idle / low-power hook** (`ACROSCHED_USE_IDLE_HOOK = 1`) enters `__WFI()` when no task runs in an iteration, to save the 1S logic battery. | Draft |
 
 ## 9. Toolchain
 

@@ -62,10 +62,10 @@ There are **no tachometers or encoders**: throttle is open-loop (duty = throttle
 Nux/
 ├─ common/                # shared by both firmwares
 │  ├─ protocol/           # radio contract compiled into both sides
-│  ├─ lib/                # frozen AcroSched: prebuilt libs + public headers
-│  │  ├─ inc/             # public scheduler headers
-│  │  ├─ ac6/             # AC6 library
-│  │  └─ gcc/             # GCC library
+│  ├─ lib/                # frozen AcroSched: public headers + prebuilt libs
+│  │  ├─ *.h              # public scheduler headers + acrosched_port.h
+│  │  ├─ stm32f1-ac6/     # AC6 library (acrosched.lib)
+│  │  └─ stm32f1-gcc/     # GCC library (libacrosched.a)
 │  └─ sched/              # thin scheduler adapter (SysTick tick source)
 ├─ vehicle/               # car firmware (Nux)
 │  ├─ inc/

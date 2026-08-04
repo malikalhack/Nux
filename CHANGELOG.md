@@ -19,5 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`common/protocol/nux_crc.{h,c}`).
 - Thin scheduler adapter `common/sched/nux_sched.{h,c}` over the frozen
   AcroSched library, plus the Cortex-M3 port header.
+- Board support package for both firmwares (`vehicle/bsp/`, `transmitter/bsp/`):
+  STM32F103C8 clock/Flash/UART bring-up, IWDG, SysTick driving the scheduler
+  adapter, and ARMv7-M fault handlers.
 
 [Unreleased]: https://example.com/nux/compare/HEAD

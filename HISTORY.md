@@ -75,3 +75,19 @@ bottom). Release-facing changes are summarised separately in
   `_Static_assert` guards keep the mode/status encodings and the tick width in
   lock-step with the pre-built library ABI.
 
+## 2026-08-04
+
+### Board support package
+- Cleaned the imported BSP skeletons for both firmwares
+  (`vehicle/bsp/`, `transmitter/bsp/`) down to a shared, board-agnostic base;
+  the two copies are kept identical for now (per-peripheral split comes later).
+- Retargeted from the STM32VLDISCOVERY template (STM32F100 Value Line, 24 MHz)
+  to **STM32F103C8**: 72 MHz SYSCLK from the 8 MHz HSE crystal (PLL ×9), Flash
+  2 wait states + prefetch, APB1 /2 (36 MHz), APB2 72 MHz; debug USART1 on
+  PA9/PA10 re-tuned to `BRR = 625` for 115200 baud.
+- Bound SysTick to the scheduler adapter: `SysTick_Handler` now calls
+  `nuxSchedTick()`; dropped the BSP-owned `sys_tick`, the `acrosched.h` include
+  and the pre-emption tick (cooperative kernel only).
+- Kept the fault handlers (`handlers.c`) as a naked MSP/PSP trampoline into a
+  common C handler that captures the stacked frame and fault-status registers.
+

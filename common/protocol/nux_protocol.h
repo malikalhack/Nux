@@ -127,7 +127,7 @@ typedef enum ENuxStatusFlags {
 typedef struct NUX_PACKED SNuxCommand {
     uint8_t  version;  /**< = NUX_PROTOCOL_VERSION                         */
     uint8_t  type;     /**< = eNuxFrameCommand                            */
-    uint8_t  seq;      /**< Rolling counter (0..255) for miss detection.  */
+    uint16_t seq;      /**< Rolling counter (0..65535) for miss detection.*/
     int16_t  steering; /**< NUX_AXIS_MIN..MAX, 0 = centre.                */
     int16_t  throttle; /**< NUX_AXIS_MIN..MAX, 0 = neutral, < 0 = reverse.*/
     uint8_t  lights;   /**< Bit mask of ENuxLightFlags_t.                 */
@@ -145,7 +145,7 @@ typedef struct NUX_PACKED SNuxCommand {
 typedef struct NUX_PACKED SNuxTelemetry {
     uint8_t  version;     /**< = NUX_PROTOCOL_VERSION                      */
     uint8_t  type;        /**< = eNuxFrameTelemetry                       */
-    uint8_t  seq;         /**< Echoes the command seq being acknowledged. */
+    uint16_t seq;         /**< Echoes the command seq being acknowledged. */
     uint16_t battery_mv;  /**< Traction pack voltage, millivolts.         */
     uint8_t  battery_pct; /**< Traction pack charge estimate, 0..100 %.   */
     uint8_t  status;      /**< Bit mask of ENuxStatusFlags_t.             */
@@ -155,10 +155,10 @@ typedef struct NUX_PACKED SNuxTelemetry {
 /*----------------------------------------------------------------------------*/
 
 /* Wire-size guards: catch accidental padding or field reordering at build time. */
-_Static_assert(sizeof(SNuxCommand_t)   == 10U,
-               "SNuxCommand_t must be 10 bytes on the wire");
-_Static_assert(sizeof(SNuxTelemetry_t) ==  9U,
-               "SNuxTelemetry_t must be 9 bytes on the wire");
+_Static_assert(sizeof(SNuxCommand_t)   == 11U,
+               "SNuxCommand_t must be 11 bytes on the wire");
+_Static_assert(sizeof(SNuxTelemetry_t) == 10U,
+               "SNuxTelemetry_t must be 10 bytes on the wire");
 
 /**
  * @def NUX_CMD_FRAME_SIZE
@@ -182,7 +182,7 @@ _Static_assert(sizeof(SNuxTelemetry_t) ==  9U,
  * @retval true  Header and CRC written.
  * @retval false @p frame is NULL.
  */
-bool nuxCommandFinalize(SNuxCommand_t *frame, uint8_t seq);
+bool nuxCommandFinalize(SNuxCommand_t *frame, uint16_t seq);
 
 /*----------------------------------------------------------------------------*/
 
@@ -205,7 +205,7 @@ bool nuxCommandValid(SNuxCommand_t const *frame);
  * @retval true  Header and CRC written.
  * @retval false @p frame is NULL.
  */
-bool nuxTelemetryFinalize(SNuxTelemetry_t *frame, uint8_t seq);
+bool nuxTelemetryFinalize(SNuxTelemetry_t *frame, uint16_t seq);
 
 /*----------------------------------------------------------------------------*/
 

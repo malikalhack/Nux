@@ -11,6 +11,7 @@
 /******************************** Included files ******************************/
 #include <stdint.h>
 #include "bsp_steering.h"
+#include "bsp_motor.h"
 /********************************* Definitions *******************************/
 
 /**

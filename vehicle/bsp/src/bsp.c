@@ -230,6 +230,9 @@ static void rcc_config(void) {
 #if (BSP_STEERING_ENABLED == 1)
     RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;   /* TIM2 — steering servo PWM */
 #endif /* BSP_STEERING_ENABLED */
+#if (BSP_MOTOR_ENABLED == 1)
+    RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;   /* TIM1 — motor PWM */
+#endif /* BSP_MOTOR_ENABLED */
 
     system_clock_hz = SYSTEM_CLOCK_HZ;
 }
@@ -260,6 +263,23 @@ static void gpio_config(void) {
     GPIOB->CRH = (GPIOB->CRH & ~(0xFUL << 8U))
                | (0xBUL << 8U);   /* PB10 CH3: AF-PP 50 MHz */
 #endif /* BSP_STEERING_ENABLED */
+
+#if (BSP_MOTOR_ENABLED == 1)
+    /*
+     * PA8  (TIM1_CH1): AF push-pull, 50 MHz → CNF=10, MODE=11 → 0xB
+     *                  bits [3:0] of GPIOA->CRH
+     * PA11 (motor DIR1): push-pull output, 50 MHz → CNF=00, MODE=11 → 0x3
+     *                  bits [15:12] of GPIOA->CRH
+     * PA12 (motor DIR2): push-pull output, 50 MHz → CNF=00, MODE=11 → 0x3
+     *                  bits [19:16] of GPIOA->CRH
+     */
+    GPIOA->CRH = (GPIOA->CRH & ~(0xFUL << 0U))
+               | (0xBUL << 0U);   /* PA8  CH1: AF-PP 50 MHz */
+    GPIOA->CRH = (GPIOA->CRH & ~(0xFUL << 12U))
+               | (0x3UL << 12U);  /* PA11 DIR1: push-pull */
+    GPIOA->CRH = (GPIOA->CRH & ~(0xFUL << 16U))
+               | (0x3UL << 16U);  /* PA12 DIR2: push-pull */
+#endif /* BSP_MOTOR_ENABLED */
 }
 /*----------------------------------------------------------------------------*/
 
@@ -412,4 +432,85 @@ void bspSteeringSetPulseWidth(uint16_t pulse_us) {
 }
 
 #endif /* BSP_STEERING_ENABLED */
+
+#if (BSP_MOTOR_ENABLED == 1)
+
+/** @fn bspMotorInit */
+void bspMotorInit(void) {
+    /*
+     * Configure TIM1 for 1 kHz PWM on PA8 (TIM1_CH1):
+     *   PSC  = 71 (PCLK2 = 72 MHz / 72 = 1 MHz)
+     *   ARR  = 9999 (1 MHz / 10000 = 100 Hz frequency, or adjust for 1 kHz)
+     * Actually, for 1 kHz: ARR = 999 (1 MHz / 1000 = 1 kHz)
+     *   CCR1 pulse = 0..999 for 0..100% duty cycle
+     */
+    TIM1->PSC = 71U;    /* Prescaler: 72 MHz / 72 = 1 MHz */
+    TIM1->ARR = 999U;   /* Auto-reload: 1 MHz / 1000 = 1 kHz */
+    TIM1->CCR1 = 0U;    /* Compare register: 0% duty initially */
+
+    /*
+     * Configure CH1 for PWM mode 1 (output active when TIM1->CNT < TIM1->CCR1):
+     *   CCMR1: OC1M = 110 (PWM mode 1), OC1PE = 1 (preload enabled)
+     *   CCER:  CC1E = 1 (CH1 output enabled), CC1P = 0 (active high)
+     *   BDTR:  MOE = 1 (main output enable for TIM1)
+     */
+    TIM1->CCMR1 = (TIM1->CCMR1 & ~(0x7UL << 4U))
+                | (0x6UL << 4U)   /* OC1M = 110 (PWM mode 1) */
+                | (1UL << 3U);    /* OC1PE = 1 (preload) */
+    TIM1->CCER |= (1UL << 0U);    /* CC1E = 1 (output enabled) */
+    TIM1->BDTR |= (1UL << 15U);   /* MOE = 1 (main output enable) */
+    TIM1->CR1 = TIM_CR1_CEN;       /* Enable timer */
+}
+
+/*----------------------------------------------------------------------------*/
+
+/** @fn bspMotorSetThrottle */
+void bspMotorSetThrottle(uint16_t throttle) {
+    /* Clamp to 0..10000 range (0..100% duty cycle, mapped to 0..999 for 1kHz) */
+    if (throttle > 10000U) {
+        throttle = 10000U;
+    }
+    else {
+        /* Within valid range, no change */
+    }
+
+    /* Convert 0..10000 to 0..999 (1% granularity = 10 units) */
+    uint16_t ccr_val = (throttle / 10U);
+    if (ccr_val > 999U) {
+        ccr_val = 999U;
+    }
+    else {
+        /* Within valid range, no change */
+    }
+
+    TIM1->CCR1 = ccr_val;
+}
+
+/*----------------------------------------------------------------------------*/
+
+/** @fn bspMotorSetDirection */
+void bspMotorSetDirection(uint8_t direction) {
+    /*
+     * Direction control via PA11 (DIR1) and PA12 (DIR2):
+     *   0 = stop/brake:  both low (0, 0)
+     *   1 = forward:     DIR1=1, DIR2=0 (PA11=high, PA12=low)
+     *   2 = reverse:     DIR1=0, DIR2=1 (PA11=low, PA12=high)
+     */
+    switch (direction) {
+        case 1:
+            GPIOA->BSRR = (1UL << 11U);     /* PA11 = 1 (forward) */
+            GPIOA->BRR  = (1UL << 12U);     /* PA12 = 0 */
+            break;
+        case 2:
+            GPIOA->BRR  = (1UL << 11U);     /* PA11 = 0 (reverse) */
+            GPIOA->BSRR = (1UL << 12U);     /* PA12 = 1 */
+            break;
+        default:
+            /* Stop: both low */
+            GPIOA->BRR  = (1UL << 11U) | (1UL << 12U);
+            break;
+    }
+}
+
+#endif /* BSP_MOTOR_ENABLED */
 /******************************************************************************/

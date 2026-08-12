@@ -13,6 +13,7 @@
 #include "nux_sched.h"
 #include "debug.h"
 #include "steering.h"
+#include "motor.h"
 
 /********************* Application Programming Interface *********************/
 
@@ -23,6 +24,9 @@ int main(void) {
 
     /* Initialize steering control */
     steeringInit();
+
+    /* Initialize motor control */
+    motorInit();
 
     /* Initialize debug console (for testing and development) */
     debugInit();

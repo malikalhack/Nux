@@ -19,6 +19,13 @@
 #define BSP_TICKS_PER_SEC   1000U
 
 /**
+ * @def BSP_DEBUG_CONSOLE
+ * @brief Enable/disable the debug console over UART (independent from radio).
+ * @note  Set to 0 to completely remove debug functionality and save code space.
+ */
+#define BSP_DEBUG_CONSOLE   1
+
+/**
  * @enum EResetCause
  * @brief Cause of the most recent MCU reset, as reported by @ref reset_cause.
  */
@@ -71,6 +78,14 @@ void bspWatchdogKick(void);
  * @param[in] c - character to transmit.
  */
 void uartSendChar(char c);
+
+/**
+ * @brief Receives a single character from the debug UART if available (non-blocking).
+ * @details If no data is available, returns 0 and sets *c to 0.
+ * @param[out] c - pointer to store the received character (not modified if no data).
+ * @returns 1 if a character was received, 0 if no data available.
+ */
+uint8_t uartRecvChar(char *c);
 
 /**
  * @brief Transmits a null-terminated string over the debug UART (blocking).

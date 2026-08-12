@@ -46,3 +46,4 @@ project:
     - group: App
       files:
         - file: src/main.c
+        - file: src/debug.c

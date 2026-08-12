@@ -11,6 +11,7 @@
 /******************************** Included files ******************************/
 #include "bsp.h"
 #include "nux_sched.h"
+#include "debug.h"
 
 /********************* Application Programming Interface *********************/
 
@@ -18,6 +19,9 @@
 int main(void) {
     bspInit();
     (void)nuxSchedInit();
+
+    /* Initialize debug console (for testing and development) */
+    debugInit();
 
     /* Application tasks (radio RX, control, telemetry, lights) are added here. */
 

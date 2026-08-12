@@ -73,6 +73,14 @@ void bspWatchdogKick(void);
 void uartSendChar(char c);
 
 /**
+ * @brief Receives a single character from the debug UART if available (non-blocking).
+ * @details If no data is available, returns 0 and sets *c to 0.
+ * @param[out] c - pointer to store the received character (not modified if no data).
+ * @returns 1 if a character was received, 0 if no data available.
+ */
+uint8_t uartRecvChar(char *c);
+
+/**
  * @brief Transmits a null-terminated string over the debug UART (blocking).
  * @param[in] str - pointer to the string to transmit (must not be NULL).
  */

@@ -119,3 +119,18 @@ bottom). Release-facing changes are summarised separately in
   (`nux.csolution.yml`, `common/nux_common.clayer.yml`, `lib/{inc,ac6,gcc}`,
   per-project `*.cproject.yml`, `bsp/{inc,src}`, `src/`, `RTE/Device/`).
 
+## 2026-08-12
+
+### Control strategy decision
+- Fixed the control strategy for the first prototype: the steering servo is
+  driven from a 50 Hz pulse train with direct angle-to-pulse conversion; there is
+  no MCU-side PID loop for the servo.
+- Fixed the traction control law for the v0.1 prototype: no speed sensor is
+  available, so there is no speed PID loop; PWM duty is mapped to throttle and
+  current feedback is used as the active control signal.
+- Chosen regulation model: open-loop throttle mapping with a PI current loop
+  (driver IPROPI or shunt) for load limiting and coarse torque management, with
+  current limiting, battery undervoltage checks and fail-safe active braking.
+- This decision is now reflected in the project requirements so the architecture
+  remains stable while the hardware and firmware are implemented.
+

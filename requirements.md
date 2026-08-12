@@ -26,15 +26,16 @@ Status legend: **Draft** (agreed, not implemented) · **WIP** · **Done** ·
 |---|---|---|
 | REQ-NUX-010 | The traction motor is driven by a **MOSFET H-bridge** (efficiency-first; target part DRV8251A). | Draft |
 | REQ-NUX-011 | The drive must support **reverse**. | Draft |
-| REQ-NUX-012 | Throttle is **open-loop**: PWM duty maps to throttle (no tachometer/encoder available). | Draft |
-| REQ-NUX-013 | Motor current is sensed (driver IPROPI or shunt) for coarse load feedback. | Deferred |
+| REQ-NUX-012 | Throttle is **open-loop** by design: no tachometer/encoder is available, so PWM duty is mapped directly to the throttle command and regulated by current feedback rather than a speed PID loop. | Draft |
+| REQ-NUX-013 | Motor current is sensed (driver IPROPI or shunt) and used for **current limiting / PI regulation** and coarse load feedback. | Draft |
+| REQ-NUX-014 | For the v0.1 prototype there is **no speed feedback path**; the chassis controller does not implement a speed PID loop, only a current-based control law. | Draft |
 
 ## 3. Steering
 
 | ID | Requirement | Status |
 |---|---|---|
 | REQ-NUX-020 | Steering uses an **SG90** servo driven at **50 Hz** (1–2 ms pulse). | Draft |
-| REQ-NUX-021 | Steering angle is proportional to the commanded value. | Draft |
+| REQ-NUX-021 | Steering angle is proportional to the commanded value; the MCU generates the 50 Hz pulse train directly and does not use a PID loop for the servo. | Draft |
 | REQ-NUX-022 | Configurable end-point limits and centre trim. | Deferred |
 
 ## 4. Radio link

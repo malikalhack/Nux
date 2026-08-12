@@ -286,6 +286,20 @@ void uartSendChar(char c) {
 }
 /*----------------------------------------------------------------------------*/
 
+/** @fn uartRecvChar */
+uint8_t uartRecvChar(char *c) {
+#ifdef UART_ENABLED
+    if ((USART1->SR & USART_SR_RXNE) != 0U) {
+        *c = (char)(USART1->DR & 0xFFU);
+        return 1U;
+    }
+#else
+    (void)c;
+#endif /* UART_ENABLED */
+    return 0U;
+}
+/*----------------------------------------------------------------------------*/
+
 /** @fn uartSendStr */
 void uartSendStr(const char *str) {
     while (*str != '\0') {

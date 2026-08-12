@@ -128,6 +128,9 @@ uint32_t get_system_core_clock(void) {
 void bspInit(void) {
     systick_config(system_clock_hz / BSP_TICKS_PER_SEC);
 
+    /* Initialize steering servo control */
+    bspSteeringInit();
+
     /* Enable the configurable fault exceptions (MemManage, BusFault,
      * UsageFault) so they trap to their own handlers in handlers.c instead
      * of escalating to HardFault. */
@@ -224,6 +227,9 @@ static void rcc_config(void) {
     /* Enable peripheral clocks */
     RCC->APB2ENR |= RCC_APB2ENR_IOPAEN    /* GPIOA — USART1 pins */
                   | RCC_APB2ENR_USART1EN; /* USART1              */
+#if (BSP_STEERING_ENABLED == 1)
+    RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;   /* TIM2 — steering servo PWM */
+#endif /* BSP_STEERING_ENABLED */
 
     system_clock_hz = SYSTEM_CLOCK_HZ;
 }
@@ -231,6 +237,9 @@ static void rcc_config(void) {
 
 /** @fn gpio_config */
 static void gpio_config(void) {
+    /* Enable GPIOB for TIM2_CH3 (steering servo on PB10) */
+    RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
+
 #ifdef UART_ENABLED
     /*
      * PA9  (USART1_TX): AF push-pull, 50 MHz → CNF=10, MODE=11 → 0xB
@@ -242,6 +251,15 @@ static void gpio_config(void) {
                | (0xBUL << 4U)    /* PA9  TX: AF-PP 50 MHz */
                | (0x4UL << 8U);   /* PA10 RX: float input  */
 #endif /* UART_ENABLED */
+
+#if (BSP_STEERING_ENABLED == 1)
+    /*
+     * PB10 (TIM2_CH3): AF push-pull, 50 MHz → CNF=10, MODE=11 → 0xB
+     *                  bits [11:8] of GPIOB->CRH
+     */
+    GPIOB->CRH = (GPIOB->CRH & ~(0xFUL << 8U))
+               | (0xBUL << 8U);   /* PB10 CH3: AF-PP 50 MHz */
+#endif /* BSP_STEERING_ENABLED */
 }
 /*----------------------------------------------------------------------------*/
 
@@ -333,4 +351,65 @@ void uartSendUint16(uint16_t n) {
         }
     }
 }
+
+#if (BSP_STEERING_ENABLED == 1)
+/*----------------------------------------------------------------------------*/
+
+/**
+ * @brief Initialize TIM2 for steering servo PWM.
+ * @details Configures TIM2 on PB10 (TIM2_CH3) for 50 Hz PWM output (20 ms period).
+ *          Clock source: APB1 (36 MHz after /2 prescale) → 1 MHz timer clock.
+ *          Pulse range: 1000..2000 us (1.0..2.0 ms) for SG90 servo.
+ */
+void bspSteeringInit(void) {
+    /*
+     * TIM2 clock: APB1 = 36 MHz
+     * Prescale (PSC): 35 (divides to 36 MHz / 36 = 1 MHz timer clock)
+     * Auto-reload (ARR): 19999 (1 MHz * 20 ms = 20000 ticks, so ARR = 19999)
+     * This gives 50 Hz frequency (period = 20 ms).
+     */
+    TIM2->PSC = 35U;
+    TIM2->ARR = 19999U;
+
+    /* Configure channel 3 (PB10) in PWM mode 1 (output compare).
+     * CCMR2 bits [12:10] = 110 (PWM mode 1: active while counter < CCR)
+     * CCMR2 bits [9:8] = 01 (output compare preload enabled)
+     */
+    TIM2->CCMR2 = (TIM2->CCMR2 & ~(0x0FUL << 8U))
+                | (0x6UL << 12U)   /* CH3: PWM mode 1 (bits 14:12) */
+                | (0x1UL << 8U);   /* CH3: preload enable (bit 9)   */
+
+    /* Enable channel 3 output (CCER bit 8) */
+    TIM2->CCER |= TIM_CCER_CC3E;
+
+    /* Set initial pulse width to center (1500 us) */
+    TIM2->CCR3 = 1500U;
+
+    /* Enable and start TIM2 */
+    TIM2->CR1 |= TIM_CR1_CEN;
+}
+/*----------------------------------------------------------------------------*/
+
+/**
+ * @brief Set the servo pulse width.
+ * @param[in] pulse_us - pulse width in microseconds [1000..2000].
+ *                       Values outside range are clamped.
+ */
+void bspSteeringSetPulseWidth(uint16_t pulse_us) {
+    /* Clamp to valid servo range */
+    if (pulse_us < 1000U) {
+        pulse_us = 1000U;
+    }
+    else if (pulse_us > 2000U) {
+        pulse_us = 2000U;
+    }
+    else {
+        /* Within valid range, no change */
+    }
+
+    /* Set compare register (timer runs at 1 MHz, so 1 tick = 1 us) */
+    TIM2->CCR3 = pulse_us;
+}
+
+#endif /* BSP_STEERING_ENABLED */
 /******************************************************************************/

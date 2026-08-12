@@ -47,3 +47,4 @@ project:
       files:
         - file: src/main.c
         - file: src/debug.c
+        - file: src/steering.c

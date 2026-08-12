@@ -93,8 +93,12 @@ static uint8_t parse_int16(const char *str, int16_t *val) {
     if (*str == '-') {
         sign = -1;
         str++;
-    } else if (*str == '+') {
+    }
+    else if (*str == '+') {
         str++;
+    }
+    else {
+        /* No sign, use default (positive) */
     }
 
     /* Parse digits */
@@ -367,18 +371,23 @@ static void debug_handle_rx_char(uint8_t c) {
             cmd_index = 0U;
             memset(cmd_buffer, 0, sizeof(cmd_buffer));
         }
-    } else if (c == '\x08' || c == '\x7F') {
+    }
+    else if (c == '\x08' || c == '\x7F') {
         /* Backspace: erase one character */
         if (cmd_index > 0U) {
             cmd_index--;
             uartSendStr("\x08 \x08");  /* Backspace, space, backspace for display */
         }
-    } else if (c >= 0x20 && c < 0x7F) {
+    }
+    else if (c >= 0x20 && c < 0x7F) {
         /* Printable character: add to buffer */
         if (cmd_index < (sizeof(cmd_buffer) - 1U)) {
             cmd_buffer[cmd_index++] = (char)c;
             uartSendChar((char)c);  /* Echo */
         }
+    }
+    else {
+        /* Non-printable, non-backspace character, ignore */
     }
 }
 

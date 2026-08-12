@@ -12,6 +12,7 @@
 #include "bsp.h"
 #include "nux_sched.h"
 #include "debug.h"
+#include "steering.h"
 
 /********************* Application Programming Interface *********************/
 
@@ -19,6 +20,9 @@
 int main(void) {
     bspInit();
     (void)nuxSchedInit();
+
+    /* Initialize steering control */
+    steeringInit();
 
     /* Initialize debug console (for testing and development) */
     debugInit();

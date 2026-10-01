@@ -1,5 +1,6 @@
-# Local config files
-.github/
+# GitHub stuff
+.github/*
+!.github/instructions/
 
 # Wiki pieces
 wiki/
